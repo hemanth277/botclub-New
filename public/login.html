@@ -90,6 +90,7 @@
   </div>
 
   <script src="nav.js"></script>
+  <script src="config.js"></script>
   <script>
     let isLogin = true;
     let selectedRole = 'customer';
@@ -154,7 +155,7 @@
       const password = document.getElementById('password').value;
       const email = document.getElementById('email').value;
 
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const endpoint = isLogin ? `${API_BASE_URL}/api/auth/login` : `${API_BASE_URL}/api/auth/register`;
       const body = isLogin ? { username, password } : { username, email, password };
 
       try {

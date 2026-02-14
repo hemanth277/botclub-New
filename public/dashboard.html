@@ -131,6 +131,7 @@
     </div>
 
     <script src="nav.js"></script>
+    <script src="config.js"></script>
     <script>
         let userData = JSON.parse(localStorage.getItem('user'));
 
@@ -146,7 +147,7 @@
 
         async function fetchProfile() {
             try {
-                const res = await fetch(`/api/user/profile?userId=${userData.id}`);
+                const res = await fetch(`${API_BASE_URL}/api/user/profile?userId=${userData.id}`);
                 if (res.ok) {
                     const fullUser = await res.json();
                     renderCart(fullUser.cart);

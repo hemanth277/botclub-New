@@ -146,6 +146,7 @@
   </main>
 
   <script src="nav.js"></script>
+  <script src="config.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user || user.role !== 'admin') {
@@ -201,7 +202,7 @@
 
     async function loadProducts() {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch(`${API_BASE_URL}/api/products`);
         const products = await res.json();
         const container = document.getElementById('product-list');
 
@@ -275,7 +276,21 @@
       }
     }
 
-    // ... deleteProduct ...
+    window.deleteProduct = async (id) => {
+      if (confirm('Delete this product?')) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/products/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            loadProducts();
+          } else {
+            alert('Failed to delete product');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error deleting product');
+        }
+      }
+    };
 
     async function deleteAllProducts() {
       if (!confirm('DANGER: Are you sure you want to delete ALL products? This cannot be undone.')) return;
@@ -286,7 +301,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/products', { method: 'DELETE' });
+        const res = await fetch(`${API_BASE_URL}/api/products`, { method: 'DELETE' });
 
         if (res.ok) {
           const data = await res.json();
@@ -327,7 +342,7 @@
       };
 
       try {
-        const url = editingProductId ? `/api/products/${editingProductId}` : '/api/products';
+        const url = editingProductId ? `${API_BASE_URL}/api/products/${editingProductId}` : `${API_BASE_URL}/api/products`;
         const method = editingProductId ? 'PUT' : 'POST';
 
         const res = await fetch(url, {
