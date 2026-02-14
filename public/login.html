@@ -121,6 +121,7 @@
         subtitle.textContent = 'Manage your store';
         toggleContainer.style.display = 'none'; // Admins can't self-register
         isLogin = true;
+        isLogin = true;
         emailGroup.style.display = 'none';
       } else {
         title.textContent = 'Welcome Back';
@@ -141,7 +142,7 @@
     toggleBtn.onclick = (e) => {
       e.preventDefault();
       isLogin = !isLogin;
-      title.textContent = isLogin ? 'Welcome Back' : 'Create Account';
+      title.textContent = isLogin ? (selectedRole === 'admin' ? 'Admin Login' : 'Welcome Back') : 'Create Account';
       subtitle.textContent = isLogin ? 'Please sign in to your account' : 'Join our premium community today';
       toggleText.textContent = isLogin ? "Don't have an account?" : "Already have an account?";
       toggleBtn.textContent = isLogin ? 'Sign Up' : 'Sign In';
