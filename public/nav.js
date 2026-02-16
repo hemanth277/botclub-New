@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Select nav elements
     const navDashboard = document.getElementById('nav-dashboard');
     const navAdmin = document.getElementById('nav-admin');
+    const navCart = document.getElementById('nav-cart');
     const navAuth = document.getElementById('nav-auth');
 
     if (user) {
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (navAdmin) navAdmin.style.display = 'inline-block';
         } else {
             if (navDashboard) navDashboard.style.display = 'inline-block';
+            if (navCart) navCart.style.display = 'inline-block';
         }
     }
 });

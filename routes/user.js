@@ -73,6 +73,30 @@ router.post("/cart", async (req, res) => {
     }
 });
 
+// Update Cart Quantity
+router.put("/cart", async (req, res) => {
+    const { userId, productId, quantity } = req.body;
+    try {
+        const user = await User.findById(userId);
+        const cartItem = user.cart.find(item => item.product.toString() === productId);
+
+        if (cartItem) {
+            cartItem.quantity = quantity;
+            if (cartItem.quantity <= 0) {
+                user.cart = user.cart.filter(item => item.product.toString() !== productId);
+            }
+        }
+
+        await user.save();
+        await user.populate('cart.product');
+        // Filter out null products just in case
+        user.cart = user.cart.filter(item => item.product !== null);
+        res.json(user.cart);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Remove from Cart
 router.delete("/cart", async (req, res) => {
     const { userId, productId } = req.body;
