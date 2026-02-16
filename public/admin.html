@@ -199,14 +199,15 @@
 
 
     let editingProductId = null;
+    let allProducts = [];
 
     async function loadProducts() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/products`);
-        const products = await res.json();
+        allProducts = await res.json();
         const container = document.getElementById('product-list');
 
-        container.innerHTML = products.map(p => `
+        container.innerHTML = allProducts.map(p => `
           <div class="dash-card" style="padding: 1.5rem; display: flex; flex-direction: column; height: 100%;">
             <div style="margin-bottom: 1rem; border-radius: 8px; overflow: hidden; height: 150px; background: var(--bg-dark);">
               <img src="${p.imageUrl || 'https://placehold.co/300x200?text=No+Image'}" 
@@ -225,7 +226,7 @@
               </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
-              <button onclick="editProduct('${p._id}', '${encodeURIComponent(JSON.stringify(p))}')" 
+              <button onclick="editProduct('${p._id}')" 
                 style="background: transparent; border: 1px solid rgba(59, 130, 246, 0.5); color: #3b82f6; padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
                 Edit
               </button>
@@ -249,31 +250,28 @@
       document.getElementById('product-form').scrollIntoView({ behavior: 'smooth' });
     }
 
-    function editProduct(id, productStr) {
-      try {
-        const product = JSON.parse(decodeURIComponent(productStr));
-        editingProductId = id;
+    function editProduct(id) {
+      const product = allProducts.find(p => p._id === id);
+      if (!product) return;
 
-        document.getElementById('name').value = product.name;
-        document.getElementById('price').value = product.price;
-        document.getElementById('stock').value = product.stock;
-        document.getElementById('imageUrl').value = product.imageUrl || '';
-        document.getElementById('description').value = product.description || '';
+      editingProductId = id;
 
-        const submitBtn = document.querySelector('button[type="submit"]');
-        submitBtn.textContent = 'Update Product';
-        submitBtn.style.background = '#3b82f6';
+      document.getElementById('name').value = product.name;
+      document.getElementById('price').value = product.price;
+      document.getElementById('stock').value = product.stock;
+      document.getElementById('imageUrl').value = product.imageUrl || '';
+      document.getElementById('description').value = product.description || '';
 
-        document.getElementById('form-container').style.display = 'block';
-        document.getElementById('form-title').textContent = 'Edit Product';
-        document.getElementById('create-btn').style.display = 'none';
+      const submitBtn = document.querySelector('button[type="submit"]');
+      submitBtn.textContent = 'Update Product';
+      submitBtn.style.background = '#3b82f6';
 
-        // Scroll to form
-        document.getElementById('product-form').scrollIntoView({ behavior: 'smooth' });
-      } catch (err) {
-        console.error('Error parsing product data', err);
-        alert('Error loading product for edit');
-      }
+      document.getElementById('form-container').style.display = 'block';
+      document.getElementById('form-title').textContent = 'Edit Product';
+      document.getElementById('create-btn').style.display = 'none';
+
+      // Scroll to form
+      document.getElementById('product-form').scrollIntoView({ behavior: 'smooth' });
     }
 
     window.deleteProduct = async (id) => {
