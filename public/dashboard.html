@@ -31,9 +31,23 @@
     </header>
 
     <main class="container animate-fade">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem;">
             <h1 id="welcome-text">Your Dashboard</h1>
             <p style="color: var(--text-muted); font-size: 0.9rem;">Member since 2026</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container" style="margin-bottom: 2rem;">
+            <div style="position: relative; max-width: 600px; margin: 0 auto;">
+                <span
+                    style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem;">🔍</span>
+                <input type="text" id="dashboard-search" placeholder="Search cart, wishlist, or orders..."
+                    style="width: 100%; background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 3rem 1rem 3rem; border-radius: 12px; color: var(--text-main); font-size: 1rem; transition: all 0.3s ease;"
+                    oninput="handleSearch(this.value)">
+                <button id="search-clear" onclick="clearSearch()"
+                    style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; display: none; transition: var(--transition);"
+                    title="Clear search">✕</button>
+            </div>
         </div>
 
         <div class="dashboard-grid">
@@ -241,6 +255,98 @@
             updateUI(); // Show immediate local data
             fetchProfile(); // Fetch fresh data
         }
+
+        // Search functionality
+        let searchDebounceTimer;
+        let allCartItems = [];
+        let allWishlistItems = [];
+        let allOrderItems = [];
+
+        function handleSearch(query) {
+            const clearBtn = document.getElementById('search-clear');
+            const searchInput = document.getElementById('dashboard-search');
+
+            // Show/hide clear button
+            if (query.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+
+            // Add focus effect
+            if (query.length > 0) {
+                searchInput.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                searchInput.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            } else {
+                searchInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                searchInput.style.boxShadow = 'none';
+            }
+
+            // Debounce search
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                filterDashboardContent(query.toLowerCase().trim());
+            }, 300);
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('dashboard-search');
+            const clearBtn = document.getElementById('search-clear');
+
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            searchInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            searchInput.style.boxShadow = 'none';
+
+            // Reset all content
+            filterDashboardContent('');
+        }
+
+        function filterDashboardContent(query) {
+            // If no query, show all items
+            if (!query) {
+                renderCart(allCartItems);
+                renderWishlist(allWishlistItems);
+                return;
+            }
+
+            // Filter cart items
+            const filteredCart = allCartItems.filter(item =>
+                item.product && item.product.name && item.product.name.toLowerCase().includes(query)
+            );
+            renderCart(filteredCart);
+
+            // Filter wishlist items
+            const filteredWishlist = allWishlistItems.filter(product =>
+                product && product.name && product.name.toLowerCase().includes(query)
+            );
+            renderWishlist(filteredWishlist);
+
+            // You can add order filtering here when order data is available
+            // const filteredOrders = allOrderItems.filter(order => ...);
+        }
+
+        // Store original data when fetching
+        const originalFetchProfile = fetchProfile;
+        async function fetchProfile() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/user/profile?userId=${userData.id}`);
+                if (res.ok) {
+                    const fullUser = await res.json();
+
+                    // Store the data globally for searching
+                    allCartItems = fullUser.cart || [];
+                    allWishlistItems = fullUser.wishlist || [];
+
+                    renderCart(fullUser.cart);
+                    renderWishlist(fullUser.wishlist);
+                    updateUI(fullUser);
+                }
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            }
+        }
+
     </script>
 </body>
 
