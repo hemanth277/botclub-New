@@ -261,3 +261,36 @@ nav a:hover {
     color: var(--text-main);
     border-color: var(--text-muted);
 }
+
+/* Search Bar Styles */
+.search-container {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+#dashboard-search {
+    transition: all 0.3s ease;
+}
+
+#dashboard-search:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    background: rgba(30, 41, 59, 0.8);
+}
+
+#dashboard-search::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+#search-clear:hover {
+    color: var(--text-main);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Responsive Search Bar */
+@media (max-width: 768px) {
+    .search-container > div {
+        max-width: 100% !important;
+    }
+}
