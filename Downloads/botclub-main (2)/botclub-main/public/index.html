@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Botclub | Premium E-Commerce</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <header class="glass">
+    <a href="index.html" class="logo">Botclub</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="dashboard.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+      <a href="admin.html" id="nav-admin" style="display: none;">Admin</a>
+      <a href="cart.html" id="nav-cart" style="display: none;">Cart</a>
+      <a href="login.html" id="nav-auth">Login</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero animate-fade">
+      <div class="container">
+        <h1>Bring Science Concepts to Life with<br><span style="color: var(--primary)">Physical Functional Models</span>
+        </h1>
+        <p>Explore our curated collection of high-quality educational models designed to inspire and educate the next
+          generation of scientists.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <a href="#product-grid" class="btn-primary" style="text-decoration: none;">Explore Collection</a>
+          <a href="login.html" class="btn-manage"
+            style="text-decoration: none; padding: 0.75rem 1.5rem; font-size: 1rem;">Join Community</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <div id="product-grid" class="dashboard-grid animate-fade">
+        <!-- Products will be loaded here -->
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Botclub Premium E-Commerce. All rights reserved.</p>
+      <p style="font-size: 0.8rem; margin-top: 1rem;">Designed for Science Enthusiasts</p>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+  <script src="config.js"></script>
+  <script>
+    const userData = JSON.parse(localStorage.getItem('user'));
+
+    async function loadProducts() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/products`);
+        const products = await res.json();
+        const grid = document.getElementById('product-grid');
+
+        if (products.length === 0) {
+          grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: var(--text-muted);">No products found. Visit the admin page to add some!</p>';
+          return;
+        }
+
+        grid.innerHTML = products.map(p => `
+                    <div class="product-card">
+                        ${(!userData || userData.role !== 'admin') ? `
+                        <button class="wishlist-btn" onclick="addToWishlist('${p._id}')" title="Add to Wishlist">
+                            ♥
+                        </button>` : ''}
+                        <div class="product-image-container">
+                            <img src="${p.imageUrl || 'https://via.placeholder.com/300'}" alt="${p.name}">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">${p.name}</h3>
+                            <p class="product-desc">${p.description}</p>
+                            <div class="product-footer">
+                                <span class="product-price">$${p.price}</span>
+                                ${(!userData || userData.role !== 'admin') ? `
+                                <button class="btn-primary" onclick="addToCart('${p._id}')">Add to Cart</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+      } catch (err) {
+        console.error('Failed to load products:', err);
+      }
+    }
+
+    async function addToCart(productId) {
+      if (!userData) return window.location.href = 'login.html';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/user/cart`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userData.id, productId })
+        });
+        if (res.ok) {
+          alert('Added to Cart!');
+        } else {
+          alert('Error adding to cart');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function addToWishlist(productId) {
+      if (!userData) return window.location.href = 'login.html';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/user/wishlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userData.id, productId })
+        });
+        if (res.ok) {
+          alert('Added to Wishlist!');
+        } else {
+          alert('Error adding to wishlist');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+
+</html>
