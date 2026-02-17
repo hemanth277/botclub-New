@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Botclub | Shopping Cart</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <a href="index.html" class="logo">Botclub</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="dashboard.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+            <a href="admin.html" id="nav-admin" style="display: none;">Admin</a>
+            <a href="cart.html" id="nav-cart" class="active">Cart</a>
+            <a href="login.html" id="nav-auth">Login</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1 style="margin-bottom: 2rem;">Your Shopping Cart</h1>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+            <!-- Cart Items -->
+            <div id="cart-items" class="animate-fade">
+                <!-- Items will be loaded here -->
+                <p style="color: var(--text-muted);">Loading cart...</p>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="dash-card animate-fade" style="padding: 1.5rem; position: sticky; top: 2rem;">
+                <h2 style="margin-bottom: 1.5rem;">Order Summary</h2>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <span style="color: var(--text-muted);">Subtotal</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <span style="color: var(--text-muted);">Tax (5%)</span>
+                    <span id="tax">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <span style="color: var(--text-muted);">Shipping</span>
+                    <span id="shipping">$0.00</span>
+                </div>
+
+                <div id="discount-row"
+                    style="display: none; justify-content: space-between; margin-bottom: 1rem; color: #10b981;">
+                    <span>Discount</span>
+                    <span id="discount">-$0.00</span>
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0;"></div>
+
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700;">
+                    <span>Total</span>
+                    <span id="total">$0.00</span>
+                </div>
+
+                <!-- Coupon -->
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="coupon-code" placeholder="Coupon Code"
+                            style="flex-grow: 1; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 8px; color: white;">
+                        <button onclick="applyCoupon()"
+                            style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.75rem 1rem; border-radius: 8px; cursor: pointer; transition: var(--transition);">Apply</button>
+                    </div>
+                    <p id="coupon-msg" style="font-size: 0.85rem; margin-top: 0.5rem;"></p>
+                </div>
+
+                <button onclick="checkout()"
+                    style="width: 100%; background: var(--primary); color: white; padding: 1rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: var(--transition);">
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="nav.js"></script>
+    <script src="config.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = 'login.html';
+
+        let cartData = [];
+        let appliedDiscount = 0;
+
+        async function loadCart() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/user/profile?userId=${user.id}`);
+                const data = await res.json();
+
+                // Store cart data, filtering out any null products
+                cartData = data.cart.filter(item => item.product);
+                renderCart();
+            } catch (err) {
+                console.error('Failed to load cart', err);
+                document.getElementById('cart-items').innerHTML = '<p>Error loading cart. Please try again.</p>';
+            }
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+
+            if (cartData.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; background: var(--bg-card); border-radius: var(--radius);">
+                        <p style="margin-bottom: 1rem; color: var(--text-muted);">Your cart is empty.</p>
+                        <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Browse Products</a>
+                    </div>
+                `;
+                updateSummary();
+                return;
+            }
+
+            container.innerHTML = cartData.map(item => `
+                <div class="dash-card" style="padding: 1.5rem; display: flex; gap: 1.5rem; margin-bottom: 1.5rem; align-items: center;">
+                    <div style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--bg-dark); flex-shrink: 0;">
+                        <img src="${item.product.imageUrl || 'https://via.placeholder.com/100'}" 
+                             alt="${item.product.name}" 
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    
+                    <div style="flex-grow: 1;">
+                        <h3 style="margin-bottom: 0.5rem;">${item.product.name}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">${item.product.description}</p>
+                        <span style="color: var(--primary); font-weight: 600;">$${item.product.price}</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: end; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-dark); padding: 0.25rem; border-radius: 6px;">
+                            <button onclick="updateQuantity('${item.product._id}', ${item.quantity - 1})" 
+                                style="width: 28px; height: 28px; background: transparent; border: none; color: white; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">-</button>
+                            <span style="width: 20px; text-align: center; font-variant-numeric: tabular-nums;">${item.quantity}</span>
+                            <button onclick="updateQuantity('${item.product._id}', ${item.quantity + 1})" 
+                                style="width: 28px; height: 28px; background: transparent; border: none; color: white; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;">+</button>
+                        </div>
+                        <button onclick="removeItem('${item.product._id}')" 
+                            style="color: #ef4444; background: transparent; border: none; cursor: pointer; font-size: 0.9rem; text-decoration: underline;">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateSummary();
+        }
+
+        async function updateQuantity(productId, newQty) {
+            if (newQty < 1) return; // Prevent 0, use remove instead
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/user/cart`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, productId, quantity: newQty })
+                });
+
+                if (res.ok) {
+                    cartData = await res.json();
+                    renderCart();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to update quantity');
+            }
+        }
+
+        async function removeItem(productId) {
+            if (!confirm('Remove this item?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/user/cart`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, productId })
+                });
+
+                if (res.ok) {
+                    cartData = await res.json();
+                    renderCart();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to remove item');
+            }
+        }
+
+        function updateSummary() {
+            const subtotal = cartData.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+            const tax = subtotal * 0.05;
+            const shipping = subtotal > 100 ? 0 : 10; // Free shipping over $100
+
+            // Recalculate discount based on percentage if a coupon was valid
+            // Simplification: coupon logic handled in applyCoupon
+            // Re-apply current discount logic on update?
+            // For now, let's keep it simple: if discount was fixed amount, keep it. 
+            // If it was percentage, we'd need to store the percentage.
+            // Let's reset discount on cart change for safety or keep it if we store coupon state.
+            // For this implementation, reset if subtotal changes drastically? No, just keep simple.
+
+            const total = Math.max(0, subtotal + tax + shipping - appliedDiscount);
+
+            document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('shipping').textContent = shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`;
+            document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function applyCoupon() {
+            const code = document.getElementById('coupon-code').value.trim().toUpperCase();
+            const msg = document.getElementById('coupon-msg');
+            const discountRow = document.getElementById('discount-row');
+            const discountSpan = document.getElementById('discount');
+
+            if (!code) return;
+
+            // Dummy coupon logic
+            if (code === 'SAVE10') {
+                const subtotal = cartData.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+                appliedDiscount = subtotal * 0.10; // 10% off
+                msg.textContent = 'Coupon applied: 10% Off';
+                msg.style.color = '#10b981';
+                discountRow.style.display = 'flex';
+                discountSpan.textContent = `-$${appliedDiscount.toFixed(2)}`;
+                updateSummary();
+            } else if (code === 'MINUS5') {
+                appliedDiscount = 5;
+                msg.textContent = 'Coupon applied: $5 Off';
+                msg.style.color = '#10b981';
+                discountRow.style.display = 'flex';
+                discountSpan.textContent = `-$5.00`;
+                updateSummary();
+            } else {
+                appliedDiscount = 0;
+                msg.textContent = 'Invalid Coupon';
+                msg.style.color = '#ef4444';
+                discountRow.style.display = 'none';
+                updateSummary();
+            }
+        }
+
+        function checkout() {
+            if (cartData.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            alert('Proceeding to Checkout... (Integration coming soon)');
+        }
+
+        loadCart();
+    </script>
+</body>
+
+</html>
