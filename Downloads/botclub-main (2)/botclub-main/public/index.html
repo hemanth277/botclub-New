@@ -6,14 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Botclub | Premium E-Commerce</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Import Parisienne font for logo -->
   <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <header class="glass">
+  <header>
     <a href="index.html" class="logo">Botclub</a>
-    <nav>
+    <button class="hamburger" id="hamburger-menu" aria-label="Toggle Navigation">☰</button>
+    <nav id="nav-menu">
       <a href="index.html">Home</a>
       <a href="dashboard.html" id="nav-dashboard" style="display: none;">Dashboard</a>
       <a href="admin.html" id="nav-admin" style="display: none;">Admin</a>
@@ -22,34 +24,17 @@
     </nav>
   </header>
 
-  <main>
+  <main class="container">
     <section class="hero animate-fade">
-      <div class="container">
-        <h1>Bring Science Concepts to Life with<br><span style="color: var(--primary)">Physical Functional Models</span>
-        </h1>
-        <p>Explore our curated collection of high-quality educational models designed to inspire and educate the next
-          generation of scientists.</p>
-        <div style="display: flex; gap: 1rem; justify-content: center;">
-          <a href="#product-grid" class="btn-primary" style="text-decoration: none;">Explore Collection</a>
-          <a href="login.html" class="btn-manage"
-            style="text-decoration: none; padding: 0.75rem 1.5rem; font-size: 1rem;">Join Community</a>
-        </div>
-      </div>
+      <h1>Bring Science Concepts to Life with</h1>
+      <p>Physical Functional Model.</p>
     </section>
 
-    <div class="container">
-      <div id="product-grid" class="dashboard-grid animate-fade">
-        <!-- Products will be loaded here -->
-      </div>
+    <div id="product-grid" class="product-grid animate-fade"
+      style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
+      <!-- Products will be loaded here -->
     </div>
   </main>
-
-  <footer>
-    <div class="container">
-      <p>&copy; 2026 Botclub Premium E-Commerce. All rights reserved.</p>
-      <p style="font-size: 0.8rem; margin-top: 1rem;">Designed for Science Enthusiasts</p>
-    </div>
-  </footer>
 
   <script src="nav.js"></script>
   <script src="config.js"></script>
@@ -68,21 +53,19 @@
         }
 
         grid.innerHTML = products.map(p => `
-                    <div class="product-card">
+                    <div class="product-card" style="background: var(--bg-card); border-radius: var(--radius); overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); position: relative;">
                         ${(!userData || userData.role !== 'admin') ? `
-                        <button class="wishlist-btn" onclick="addToWishlist('${p._id}')" title="Add to Wishlist">
+                        <button onclick="addToWishlist('${p._id}')" title="Add to Wishlist" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
                             ♥
                         </button>` : ''}
-                        <div class="product-image-container">
-                            <img src="${p.imageUrl || 'https://via.placeholder.com/300'}" alt="${p.name}">
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">${p.name}</h3>
-                            <p class="product-desc">${p.description}</p>
-                            <div class="product-footer">
-                                <span class="product-price">$${p.price}</span>
+                        <img src="${p.imageUrl || 'https://via.placeholder.com/300'}" alt="${p.name}" style="width: 100%; height: 200px; object-fit: cover;">
+                        <div style="padding: 1.5rem;">
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${p.name}</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.description}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.25rem;">$${p.price}</span>
                                 ${(!userData || userData.role !== 'admin') ? `
-                                <button class="btn-primary" onclick="addToCart('${p._id}')">Add to Cart</button>
+                                <button onclick="addToCart('${p._id}')" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: var(--transition);">Add to Cart</button>
                                 ` : ''}
                             </div>
                         </div>
@@ -130,6 +113,12 @@
         console.error(err);
       }
     }
+
+    // Auth check handled by nav.js
+
+    document.getElementById('hamburger-menu').addEventListener('click', () => {
+      document.getElementById('nav-menu').classList.toggle('active');
+    });
 
     loadProducts();
   </script>
