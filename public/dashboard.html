@@ -107,9 +107,12 @@
                 <section class="dash-card">
                     <div class="dash-header">
                         <h2>Your Wishlist</h2>
+                        <span id="wishlist-count"
+                            style="background: rgba(59,130,246,0.15); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px;">0
+                            items</span>
                     </div>
                     <div id="wishlist-grid"
-                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
                         <p style="color: var(--text-muted); padding: 1rem 0; grid-column: 1/-1;">Your wishlist is empty.
                         </p>
                     </div>
@@ -197,15 +200,78 @@
 
         function renderWishlist(wishlist) {
             const container = document.getElementById('wishlist-grid');
+            const countEl = document.getElementById('wishlist-count');
             if (!wishlist || wishlist.length === 0) {
                 container.innerHTML = '<p style="color: var(--text-muted); padding: 1rem 0; grid-column: 1/-1;">Your wishlist is empty.</p>';
+                if (countEl) countEl.textContent = '0 items';
                 return;
             }
+            if (countEl) countEl.textContent = `${wishlist.length} item${wishlist.length !== 1 ? 's' : ''}`;
             container.innerHTML = wishlist.map(product => `
-                <div title="${product.name}"
-                    style="aspect-ratio: 1/1; background: var(--bg-dark); border-radius: 8px; background-image: url('${product.imageUrl || 'https://via.placeholder.com/150'}'); background-size: cover; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="wishlist-item-card" style="background: var(--bg-dark); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition);">
+                    <div style="position: relative; height: 140px; overflow: hidden;">
+                        <img src="${product.imageUrl || 'https://placehold.co/200x140?text=No+Image'}" alt="${product.name}"
+                            style="width: 100%; height: 100%; object-fit: cover;"
+                            onerror="this.src='https://placehold.co/200x140?text=No+Image'">
+                    </div>
+                    <div style="padding: 0.75rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.4rem;">
+                        <p style="font-weight: 600; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${product.name}">${product.name}</p>
+                        <p style="color: var(--primary); font-weight: 700; font-size: 0.95rem;">$${product.price ? product.price.toFixed(2) : '—'}</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding: 0 0.75rem 0.75rem;">
+                        <button onclick="moveToCart('${product._id}')" title="Move to Cart"
+                            style="background: var(--primary); color: white; border: none; padding: 0.45rem 0.25rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: var(--transition);">🛒 Add to Cart</button>
+                        <button onclick="removeFromWishlist('${product._id}')" title="Remove"
+                            style="background: transparent; border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 0.45rem 0.25rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: var(--transition);">✕ Remove</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        async function removeFromWishlist(productId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/user/wishlist`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userData.id, productId })
+                });
+                if (res.ok) {
+                    allWishlistItems = allWishlistItems.filter(p => p._id !== productId);
+                    renderWishlist(allWishlistItems);
+                } else {
+                    alert('Failed to remove from wishlist');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error removing from wishlist');
+            }
+        }
+
+        async function moveToCart(productId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/user/cart`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userData.id, productId })
+                });
+                if (res.ok) {
+                    // Also remove from wishlist after adding to cart
+                    await fetch(`${API_BASE_URL}/api/user/wishlist`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: userData.id, productId })
+                    });
+                    allWishlistItems = allWishlistItems.filter(p => p._id !== productId);
+                    renderWishlist(allWishlistItems);
+                    // Refresh cart section
+                    fetchProfile();
+                } else {
+                    alert('Failed to add to cart');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error moving to cart');
+            }
         }
 
         function updateUI(user = userData) {
@@ -326,18 +392,14 @@
             // const filteredOrders = allOrderItems.filter(order => ...);
         }
 
-        // Store original data when fetching
-        const originalFetchProfile = fetchProfile;
+        // Override fetchProfile to also store data for search
         async function fetchProfile() {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/user/profile?userId=${userData.id}`);
                 if (res.ok) {
                     const fullUser = await res.json();
-
-                    // Store the data globally for searching
                     allCartItems = fullUser.cart || [];
                     allWishlistItems = fullUser.wishlist || [];
-
                     renderCart(fullUser.cart);
                     renderWishlist(fullUser.wishlist);
                     updateUI(fullUser);
