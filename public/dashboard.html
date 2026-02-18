@@ -21,6 +21,15 @@
 <body>
     <header>
         <a href="index.html" class="logo">Botclub</a>
+
+        <!-- Header Search Bar -->
+        <div class="header-search">
+            <span class="header-search-icon">🔍</span>
+            <input type="text" id="dashboard-search" placeholder="Search cart, wishlist..."
+                oninput="handleSearch(this.value)">
+            <button id="search-clear" onclick="clearSearch()" title="Clear">✕</button>
+        </div>
+
         <nav>
             <a href="index.html">Home</a>
             <a href="dashboard.html" id="nav-dashboard" style="display: none;">Dashboard</a>
@@ -31,23 +40,9 @@
     </header>
 
     <main class="container animate-fade">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3rem;">
             <h1 id="welcome-text">Your Dashboard</h1>
             <p style="color: var(--text-muted); font-size: 0.9rem;">Member since 2026</p>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="search-container" style="margin-bottom: 2rem;">
-            <div style="position: relative; max-width: 600px; margin: 0 auto;">
-                <span
-                    style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem;">🔍</span>
-                <input type="text" id="dashboard-search" placeholder="Search cart, wishlist, or orders..."
-                    style="width: 100%; background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 3rem 1rem 3rem; border-radius: 12px; color: var(--text-main); font-size: 1rem; transition: all 0.3s ease;"
-                    oninput="handleSearch(this.value)">
-                <button id="search-clear" onclick="clearSearch()"
-                    style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; display: none; transition: var(--transition);"
-                    title="Clear search">✕</button>
-            </div>
         </div>
 
         <div class="dashboard-grid">
